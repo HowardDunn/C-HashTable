@@ -3,5 +3,5 @@ project(C___Projects)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.cpp HashTable.cpp)
+set(SOURCE_FILES main.cpp)
 add_executable(C___Projects ${SOURCE_FILES})

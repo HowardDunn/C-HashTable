@@ -13,6 +13,8 @@ int main() {
 
     myHash.insert("Damien",20);
 
+    myHash["Damien"] = 21;
+
     std:: cout << "Damien's age: " << myHash["Damien"] << "\n";
 
 

@@ -41,7 +41,7 @@ HashTable<K, T>::HashTable() {
 
     capacity = 11;
     data = new T[capacity];
-    isset = new bool[capacity]{false};
+    isset = new bool[capacity];
     keys = new K[capacity];
     size = 0;
 }
@@ -81,7 +81,7 @@ void HashTable<K, T>::insert(K key, T value) {
     }
 
     data[std::hash<K>{}(key) % capacity] = value;
-    key[std::hash<K>{}(key) % capacity] = key;
+    keys[std::hash<K>{}(key) % capacity] = key;
     isset[std::hash<K>{}(key) % capacity] = true;
 }
 
@@ -100,7 +100,7 @@ void HashTable<K, T>::rehash() {
     K *temp_keys = keys;
 
     data = new T[capacity * 3];
-    isset = new bool[capacity * 3]{false};
+    isset = new bool[capacity * 3];
     keys = new K[capacity * 3];
 
     for (unsigned i = 0; i < capacity; ++i) {

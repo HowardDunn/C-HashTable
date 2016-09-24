@@ -2,7 +2,8 @@
 #define HASH_TABLE_H
 
 #include <functional>
-
+#include <cassert>
+#include <iostream>
 template<typename K, typename T>
 class HashTable {
 
@@ -18,7 +19,8 @@ public:
 
     T get(K key);
 
-    T operator[](K key) const;
+    T& operator[](K key);
+    T& operator[](K key) const;
 
 private:
 
@@ -31,6 +33,8 @@ private:
     void rehash();
 
     bool collides(K key);
+
+    void insert(K key);
 
 
 };
@@ -67,7 +71,8 @@ bool HashTable<K, T>::collides(K key) {
 template<typename K, typename T>
 void HashTable<K, T>::insert(K key, T value) {
 
-    ++size;
+    if(!contains(key))
+        ++size;
 
     if (size >= capacity / 2) {
 
@@ -76,6 +81,7 @@ void HashTable<K, T>::insert(K key, T value) {
 
     while (collides(key)) {
 
+        std::cout << "Collision\n";
         // Key collision
         rehash();
     }
@@ -86,10 +92,51 @@ void HashTable<K, T>::insert(K key, T value) {
 }
 
 template<typename K, typename T>
-T HashTable<K, T>::operator[](K key) const {
+void HashTable<K, T>::insert(K key) {
+
+    if(!contains(key))
+        ++size;
+
+    if (size >= capacity / 2) {
+
+        rehash();
+    }
+
+    while (collides(key)) {
+
+        std::cout << "Collision\n";
+        // Key collision
+        rehash();
+    }
+
+
+    keys[std::hash<K>{}(key) % capacity] = key;
+    isset[std::hash<K>{}(key) % capacity] = true;
+}
+
+template<typename K, typename T>
+T& HashTable<K, T>::operator[](K key) const {
+
+    assert(contains(key));
+    return data[std::hash<K>{}(key) % capacity];
+}
+
+template<typename K, typename T>
+T& HashTable<K, T>::operator[](K key){
+
+    T value;
+    insert(key);
+    return data[std::hash<K>{}(key) % capacity];
+}
+
+template <class K, class T>
+T HashTable<K,T>::get(K key){
+
+    assert(contains(key));
 
     return data[std::hash<K>{}(key) % capacity];
 }
+
 
 template<typename K, typename T>
 void HashTable<K, T>::rehash() {
@@ -110,7 +157,8 @@ void HashTable<K, T>::rehash() {
         keys[i] = temp_keys[i];
     }
 
-    capacity *= 3;
+    capacity *= 2;
+    capacity += 1;
 
     delete[] temp_data;
     delete[] temp_isset;
@@ -126,5 +174,6 @@ HashTable<K, T>::~HashTable() {
     delete[] isset;
     delete[] keys;
 }
+
 
 #endif

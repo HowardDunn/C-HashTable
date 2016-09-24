@@ -22,13 +22,16 @@ public:
     T& operator[](K key);
     T& operator[](K key) const;
 
+    unsigned size() const;
+    unsigned capacity() const;
+
 private:
 
     T *data;
     bool *isset;
     K *keys;
-    unsigned size;
-    unsigned capacity;
+    unsigned _size;
+    unsigned _capacity;
 
     void rehash();
 
@@ -43,17 +46,37 @@ private:
 template<typename K, typename T>
 HashTable<K, T>::HashTable() {
 
-    capacity = 11;
-    data = new T[capacity];
-    isset = new bool[capacity];
-    keys = new K[capacity];
-    size = 0;
+    _capacity = 191;
+    data = new T[_capacity];
+    isset = new bool[_capacity];
+    keys = new K[_capacity];
+
+    for(unsigned i=0; i < _capacity; ++i){
+
+        isset[i] = false;
+    }
+    _size = 0;
+}
+
+
+template<typename K, typename T>
+unsigned HashTable<K, T>::size() const{
+
+    return _size;
+
+}
+
+template<typename K, typename T>
+unsigned HashTable<K, T>::capacity() const{
+
+    return _capacity;
+
 }
 
 template<typename K, typename T>
 bool HashTable<K, T>::contains(K key) {
 
-    return keys[std::hash<K>{}(key) % capacity] == key;
+    return keys[std::hash<K>{}(key) % _capacity] == key;
 
 }
 
@@ -65,39 +88,38 @@ bool HashTable<K, T>::collides(K key) {
         return false;
     }
 
-    return isset[std::hash<K>{}(key) % capacity];
+    return isset[std::hash<K>{}(key) % _capacity];
 }
 
 template<typename K, typename T>
 void HashTable<K, T>::insert(K key, T value) {
 
     if(!contains(key))
-        ++size;
+        ++_size;
 
-    if (size >= capacity / 2) {
+    if (_size >= _capacity / 2) {
 
         rehash();
     }
 
     while (collides(key)) {
-
-        std::cout << "Collision\n";
+        
         // Key collision
         rehash();
     }
 
-    data[std::hash<K>{}(key) % capacity] = value;
-    keys[std::hash<K>{}(key) % capacity] = key;
-    isset[std::hash<K>{}(key) % capacity] = true;
+    data[std::hash<K>{}(key) % _capacity] = value;
+    keys[std::hash<K>{}(key) % _capacity] = key;
+    isset[std::hash<K>{}(key) % _capacity] = true;
 }
 
 template<typename K, typename T>
 void HashTable<K, T>::insert(K key) {
 
     if(!contains(key))
-        ++size;
+        ++_size;
 
-    if (size >= capacity / 2) {
+    if (_size >= _capacity / 2) {
 
         rehash();
     }
@@ -110,15 +132,15 @@ void HashTable<K, T>::insert(K key) {
     }
 
 
-    keys[std::hash<K>{}(key) % capacity] = key;
-    isset[std::hash<K>{}(key) % capacity] = true;
+    keys[std::hash<K>{}(key) % _capacity] = key;
+    isset[std::hash<K>{}(key) % _capacity] = true;
 }
 
 template<typename K, typename T>
 T& HashTable<K, T>::operator[](K key) const {
 
     assert(contains(key));
-    return data[std::hash<K>{}(key) % capacity];
+    return data[std::hash<K>{}(key) % _capacity];
 }
 
 template<typename K, typename T>
@@ -126,7 +148,7 @@ T& HashTable<K, T>::operator[](K key){
 
     T value;
     insert(key);
-    return data[std::hash<K>{}(key) % capacity];
+    return data[std::hash<K>{}(key) % _capacity];
 }
 
 template <class K, class T>
@@ -134,7 +156,7 @@ T HashTable<K,T>::get(K key){
 
     assert(contains(key));
 
-    return data[std::hash<K>{}(key) % capacity];
+    return data[std::hash<K>{}(key) % _capacity];
 }
 
 
@@ -146,19 +168,24 @@ void HashTable<K, T>::rehash() {
     bool *temp_isset = isset;
     K *temp_keys = keys;
 
-    data = new T[capacity * 3];
-    isset = new bool[capacity * 3];
-    keys = new K[capacity * 3];
+    data = new T[_capacity * 3];
+    isset = new bool[_capacity * 3];
+    keys = new K[_capacity * 3];
 
-    for (unsigned i = 0; i < capacity; ++i) {
+    for (unsigned i = 0; i < _capacity; ++i) {
 
         data[i] = temp_data[i];
         isset[i] = temp_isset[i];
         keys[i] = temp_keys[i];
     }
 
-    capacity *= 2;
-    capacity += 1;
+    for(unsigned i = _capacity; i < (_capacity*2 + 1); ++i){
+
+        isset[i] = false;
+    }
+
+    _capacity *= 2;
+    _capacity += 1;
 
     delete[] temp_data;
     delete[] temp_isset;

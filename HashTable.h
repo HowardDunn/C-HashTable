@@ -22,8 +22,12 @@ public:
     T& operator[](K key);
     T& operator[](K key) const;
 
+    void reserve(unsigned value);
+
     unsigned size() const;
     unsigned capacity() const;
+
+
 
 private:
 
@@ -103,7 +107,7 @@ void HashTable<K, T>::insert(K key, T value) {
     }
 
     while (collides(key)) {
-        
+
         // Key collision
         rehash();
     }
@@ -168,24 +172,70 @@ void HashTable<K, T>::rehash() {
     bool *temp_isset = isset;
     K *temp_keys = keys;
 
-    data = new T[_capacity * 3];
-    isset = new bool[_capacity * 3];
-    keys = new K[_capacity * 3];
+    data = new T[_capacity * 2];
+    isset = new bool[_capacity * 2];
+    keys = new K[_capacity * 2];
 
-    for (unsigned i = 0; i < _capacity; ++i) {
+    unsigned old_capacity = _capacity;
+    _capacity *= 2;
+    _capacity += 1;
 
-        data[i] = temp_data[i];
-        isset[i] = temp_isset[i];
-        keys[i] = temp_keys[i];
-    }
-
-    for(unsigned i = _capacity; i < (_capacity*2 + 1); ++i){
+    for(unsigned i = 0; i < _capacity; ++i){
 
         isset[i] = false;
     }
 
+    for (unsigned i = 0; i < old_capacity; ++i) {
+
+
+        isset[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_isset[i];
+        keys[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_keys[i];
+        data[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_data[i];
+    }
+
+
+
+
+
+    delete[] temp_data;
+    delete[] temp_isset;
+    delete[] temp_keys;
+
+
+}
+
+template<typename K, typename T>
+void HashTable<K, T>::reserve(unsigned value) {
+
+    if(_capacity > value){
+        return;
+    }
+
+    T *temp_data = data;
+    bool *temp_isset = isset;
+    K *temp_keys = keys;
+
+    data = new T[value];
+    isset = new bool[value];
+    keys = new K[value];
+
+
+    for(unsigned i = 0; i < value; ++i){
+
+        isset[i] = false;
+    }
+
+    unsigned old_capacity = _capacity;
     _capacity *= 2;
     _capacity += 1;
+    _capacity = value;
+
+    for (unsigned i = 0; i < old_capacity; ++i) {
+
+        isset[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_isset[i];
+        keys[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_keys[i];
+        data[std::hash<K>{}(temp_keys[i]) % _capacity] = temp_data[i];
+    }
 
     delete[] temp_data;
     delete[] temp_isset;
